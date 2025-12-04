@@ -12,12 +12,18 @@ typedef struct {
     int qtd;
 } MapaCidades;
 
-/*
-    Entradas e retornos de funções a cargo do aluno
-*/
+void criaMapa(MapaCidades *m, int n, int mConexoes);
 
-void criaMapa();
-void liberaMapa();
-void existeCaminho();
+/*
+    Libera toda a memória do mapa
+*/
+void liberaMapa(MapaCidades *m);
+
+/*
+    Retorna 1 se existe caminho de origem → destino
+    Retorna 0 caso contrário
+*/
+int existeCaminho(MapaCidades *m, int origem, int destino);
+
 
 #endif
