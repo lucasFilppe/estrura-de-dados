@@ -1,193 +1,196 @@
-#include <stdio.h>
-#include <stdlib.h>
+// formula.c
+
 #include "formula.h"
 
-// ------------------------------------------------------------
-// ESTRUTURAS INTERNAS (OCULTAS DO USUÁRIO)
-// ------------------------------------------------------------
+// --- Funções Auxiliares Internas ---
 
-// Cada cláusula possui exatamente 3 literais (3-CNF)
-struct Clausula {
-    int vars[3];  // exemplo: {1, -2, 3} → (a v ~b v c)
-};
+// Converte um valor inteiro (positivo/negativo) para a estrutura Literal
+Literal criaLiteral(int val) {
+    Literal l;
+    if (val < 0) {
+        l.literal_positivo = -val;
+        l.leiteral_negativo = 1; // 1 = Negado
+    } else {
+        l.literal_positivo = val;
+        l.leiteral_negativo = 0; // 0 = Não Negado
+    }
+    return l;
+}
 
-// Estrutura principal da fórmula
-struct Formula {
-    int nVars;             // número de variáveis
-    int nClausulas;        // número de cláusulas
-    struct Clausula *clauses; // vetor dinâmico das M cláusulas
-    int pos;               // quantidade já inserida com success
-};
+// Verifica se a fórmula está em um estado de CONFLITO (cláusula FALSA)
+// Retorna TRUE se houve conflito (cláusula falsa), FALSE caso contrário.
+int verificaConflito(const Formula *formula) {
+    // Itera sobre todas as cláusulas já adicionadas
+    for (int i = 0; i < formula->prox_clausula_idx; i++) {
+        int clausula_satisfeita = FALSE;
+        int tem_nao_valorada = FALSE;
 
-// ------------------------------------------------------------
-// CRIA FORMULA
-// ------------------------------------------------------------
-Formula *criaFormula(int nVars, int nClausulas)
-{
-    // Aloca a estrutura principal
-    Formula *f = malloc(sizeof(Formula));
-    if (!f) return NULL;
+        // Itera sobre os 3 literais
+        for (int j = 0; j < 3; j++) {
+            Literal lit = formula->clausulas[i].literais[j];
+            int valor_var = formula->valoracao_variaveis[lit.literal_positivo];
 
-    f->nVars = nVars;
-    f->nClausulas = nClausulas;
+            if (valor_var == NAO_VALORADA) {
+                tem_nao_valorada = TRUE;
+            } else {
+                // Checa se o literal é TRUE: (L V V) = V
+                // Literal L é V se: (L não negado E var=TRUE) OU (L negado E var=FALSE)
+                if ((lit.leiteral_negativo == 0 && valor_var == TRUE) || 
+                    (lit.leiteral_negativo == 1 && valor_var == FALSE)) {
+                    clausula_satisfeita = TRUE;
+                    break; 
+                }
+            }
+        }
+        
+        // PODA (Pruning): Se a cláusula não foi satisfeita, E 
+        // todas as suas variáveis foram valoradas (não tem NAO_VALORADA),
+        // então a cláusula é FALSE (F V F V F) = F. CONFLITO!
+        if (clausula_satisfeita == FALSE && tem_nao_valorada == FALSE) {
+            return TRUE; // Conflito encontrado
+        }
+    }
+    return FALSE; // Nenhum conflito nas cláusulas valoradas
+}
 
-    // Aloca vetor de cláusulas (M cláusulas)
-    f->clauses = malloc(sizeof(struct Clausula) * nClausulas);
-    if (!f->clauses) {
+
+// Função recursiva principal do backtracking (chama a si mesma)
+int resolveRecursivamente(Formula *formula, int idx_var) {
+    
+    // 1. CASO BASE DE SUCESSO: Todas as variáveis foram valoradas (de 1 a N)
+    if (idx_var > formula->num_variaveis) {
+        // Não é necessário chamar verificaConflito, pois a poda já fez o trabalho.
+        // Se chegamos aqui, a valoração é uma solução (TRUE)
+        return TRUE; 
+    }
+    
+    // 2. PASSO RECURSIVO: Tenta atribuir a variável 'idx_var'
+    
+    // Tenta (1): TRUE (conforme a dica para manter resultados consistentes) [cite: 106]
+    formula->valoracao_variaveis[idx_var] = TRUE;
+    
+    // Poda: Verifica se a valoração atual causou algum conflito
+    if (verificaConflito(formula) == FALSE) {
+        // Chamada recursiva para a próxima variável
+        if (resolveRecursivamente(formula, idx_var + 1) == TRUE) {
+            return TRUE; // Sucesso: propaga a solução
+        }
+    }
+    // Senão, a tentativa TRUE falhou ou levou a um caminho sem solução
+
+    // Tenta (2): FALSE
+    formula->valoracao_variaveis[idx_var] = FALSE;
+    
+    // Poda: Verifica se a valoração atual causou algum conflito
+    if (verificaConflito(formula) == FALSE) {
+        // Chamada recursiva para a próxima variável
+        if (resolveRecursivamente(formula, idx_var + 1) == TRUE) {
+            return TRUE; // Sucesso: propaga a solução
+        }
+    }
+    // Senão, a tentativa FALSE também falhou
+
+    // 3. BACKTRACK: Se nenhuma das tentativas (TRUE/FALSE) funcionou
+    formula->valoracao_variaveis[idx_var] = NAO_VALORADA; // Desfaz a atribuição (backtrack)
+    return FALSE; // Retorna falha
+}
+
+// --- Implementação das Funções da Interface (formula.h) ---
+
+// 1. criaFormula: aloca um TAD Formula [cite: 71, 48]
+Formula* criaFormula(int n_variaveis, int n_clausulas) {
+    if (n_variaveis < 1 || n_clausulas < 0 || n_variaveis > 26) {
+        return NULL; // Erro de entrada
+    }
+
+    Formula *f = (Formula *)malloc(sizeof(Formula));
+    if (f == NULL) return NULL;
+
+    f->num_variaveis = n_variaveis;
+    f->num_clausulas = n_clausulas;
+    f->prox_clausula_idx = 0;
+    
+    // Aloca vetor de cláusulas
+    f->clausulas = (Clausula *)malloc(f->num_clausulas * sizeof(Clausula));
+    if (f->clausulas == NULL) {
         free(f);
         return NULL;
     }
 
-    f->pos = 0; // nenhum elemento inserido ainda
+    // Aloca vetor de valoração (+1 para usar índice 1 a N)
+    f->valoracao_variaveis = (int *)malloc((f->num_variaveis + 1) * sizeof(int));
+    if (f->valoracao_variaveis == NULL) {
+        free(f->clausulas);
+        free(f);
+        return NULL;
+    }
+    
+    // Inicializa valoração (todas como NÃO_VALORADA)
+    for (int i = 0; i <= f->num_variaveis; i++) {
+        f->valoracao_variaveis[i] = NAO_VALORADA;
+    }
+
     return f;
 }
 
-// ------------------------------------------------------------
-// DESTROI FORMULA
-// ------------------------------------------------------------
-void destroiFormula(Formula **f)
-{
-    if (!f || !*f) return;
-
-    // libera vetor
-    free((*f)->clauses);
-
-    // libera fórmula
-    free(*f);
-
-    // evita ponteiro solto
-    *f = NULL;
+// 2. destroiFormula: desaloca um TAD Formula [cite: 72, 48]
+void destroiFormula(Formula *formula) {
+    if (formula != NULL) {
+        if (formula->clausulas != NULL) {
+            free(formula->clausulas);
+        }
+        if (formula->valoracao_variaveis != NULL) {
+            free(formula->valoracao_variaveis);
+        }
+        free(formula);
+    }
 }
 
-// ------------------------------------------------------------
-// ADICIONA CLAUSULA
-// ------------------------------------------------------------
-int adicionaClausula(Formula *f, int x, int y, int z)
-{
-    // erro: já inseriu todas M cláusulas
-    if (!f || f->pos >= f->nClausulas)
-        return 0;
-
-    // salva os três literais
-    f->clauses[f->pos].vars[0] = x;
-    f->clauses[f->pos].vars[1] = y;
-    f->clauses[f->pos].vars[2] = z;
-
-    f->pos++;  // aumenta contador
-    return 1;  // sucesso
+// 3. adicionaClausula: adiciona uma cláusula lida ao TAD Formula [cite: 73]
+int adicionaClausula(Formula *formula, int x, int y, int z) {
+    if (formula == NULL || formula->prox_clausula_idx >= formula->num_clausulas) {
+        return ERRO;
+    }
+    
+    Clausula *c = &formula->clausulas[formula->prox_clausula_idx];
+    
+    c->literais[0] = criaLiteral(x);
+    c->literais[1] = criaLiteral(y);
+    c->literais[2] = criaLiteral(z);
+    
+    formula->prox_clausula_idx++;
+    return SUCESSO;
 }
 
-// ------------------------------------------------------------
-// IMPRESSÃO DO LITERAL (auxiliar)
-// ------------------------------------------------------------
-static void imprimeLiteral(int x)
-{
-    // converte 1→'a', 2→'b', ... 26→'z'
-    char nome = 'a' + (abs(x) - 1);
-
-    if (x < 0)
-        printf("~%c", nome);  // literal negado
-    else
-        printf("%c", nome);
-}
-
-// ------------------------------------------------------------
-// IMPRIME FORMULA COMPLETA EM 3-CNF
-// ------------------------------------------------------------
-void imprimeFormula(Formula *f)
-{
+// 4. imprimeFormula: imprime o TAD Formula no formato 3-CNF [cite: 74, 95]
+void imprimeFormula(const Formula *formula) {
     printf("Formula:\n");
-
-    for (int i = 0; i < f->nClausulas; i++)
-    {
-        // coloca "∧" somente entre as cláusulas
-        printf(i == 0 ? "(" : " ∧ (");
-
-        imprimeLiteral(f->clauses[i].vars[0]);
-        printf(" v ");
-        imprimeLiteral(f->clauses[i].vars[1]);
-        printf(" v ");
-        imprimeLiteral(f->clauses[i].vars[2]);
-
+    for (int i = 0; i < formula->prox_clausula_idx; i++) {
+        // Obtém o caractere da variável (1='a', 2='b', ...)
+        printf("(");
+        for (int j = 0; j < 3; j++) {
+            Literal l = formula->clausulas[i].literais[j];
+            char var_char = (char)('a' + l.literal_positivo - 1);
+            
+            if (l.leiteral_negativo) {
+                printf("~"); // ~ ou ¬
+            }
+            printf("%c", var_char);
+            
+            if (j < 2) {
+                printf("V"); // V (OR)
+            }
+        }
         printf(")");
+        if (i < formula->prox_clausula_idx - 1) {
+            printf(" ^ "); // ^ (AND)
+        }
     }
     printf("\n");
 }
 
-// ------------------------------------------------------------
-// VERIFICA SE VALORAÇÃO ATUAL SATISFAZ TODAS AS CLÁUSULAS
-// ------------------------------------------------------------
-static int satisfaz(Formula *f, int val[])
-{
-    // percorre cláusula por cláusula
-    for (int i = 0; i < f->nClausulas; i++) {
-
-        int ok = 0;  // assume que cláusula é falsa
-
-        // percorre os 3 literais
-        for (int j = 0; j < 3; j++) {
-
-            int lit = f->clauses[i].vars[j];  // literal atual (ex: -2)
-            int var = abs(lit);               // pega var positiva (ex: 2)
-
-            int isTrue = val[var];            // 0 ou 1 da valoração
-
-            // literal negativo: usa negação lógica
-            if (lit < 0)
-                isTrue = !isTrue;
-
-            // se um literal é verdadeiro → cláusula verdadeira
-            if (isTrue) {
-                ok = 1;
-                break;
-            }
-        }
-
-        // se nenhuma literal da cláusula é verdadeira → fórmula falha
-        if (!ok) return 0;
-    }
-
-    return 1; // satisfaz tudo
-}
-
-// ------------------------------------------------------------
-// ALGORITMO BACKTRACKING PARA ATRIBUIR VALORES
-// Backtracking que tenta TRUE antes de FALSE
-static int backtrack(Formula *f, int k, int val[])
-{
-    if (k > f->nVars)
-        return satisfaz(f, val);
-
-    // tenta TRUE primeiro
-    val[k] = 1;
-    if (backtrack(f, k + 1, val)) return 1;
-
-    // depois tenta FALSE
-    val[k] = 0;
-    if (backtrack(f, k + 1, val)) return 1;
-
-    return 0;
-}
-// ------------------------------------------------------------
-// ENVOLVE O ALGORITMO E IMPRIME A SOLUÇÃO
-// ------------------------------------------------------------
-void solucaoFormula(Formula *f)
-{
-    // vetor que guarda TRUE/FALSE das variáveis
-    int *val = calloc(f->nVars + 1, sizeof(int));
-
-    // roda backtracking a partir da variável 1
-    int ok = backtrack(f, 1, val);
-
-    if (ok) {
-        printf("Solução encontrada:\n");
-        for (int i = 1; i <= f->nVars; i++) {
-            char nome = 'a' + (i - 1);
-            printf("%c: %s\n", nome, val[i] ? "True" : "False");
-        }
-    } else {
-        printf("Formula insatisfazivel.\n");
-    }
-
-    free(val); // libera memória
+// 5. solucaoFormula: Função Wrapper para iniciar a busca [cite: 75, 76]
+int solucaoFormula(Formula *formula) {
+    // Inicia a busca pela primeira variável (índice 1)
+    return resolveRecursivamente(formula, 1);
 }
