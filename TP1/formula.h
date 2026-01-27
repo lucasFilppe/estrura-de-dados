@@ -1,90 +1,57 @@
 #ifndef FORMULA_H
 #define FORMULA_H
 
-// ===========================================
-// 1. DEFINIÇÃO DO TAD LITERAL
-// ===========================================
-// Um Literal é uma variável (a, b, c, ...) ou sua negação (~a, ~b, ~c, ...).
-// A entrada usa números, onde o sinal negativo indica negação.
-typedef struct {
-    int id_variavel; // O número da variável (1 a N). Ex: 1 para 'a', 2 para 'b'.
-    int negado;      // Flag: 1 se for negado (ex: -1), 0 se não for (ex: 1).
+#include <stdio.h>
+#include <stdlib.h>
+
+// --- Definições de Constantes ---
+#define ERRO -1
+#define SUCESSO 0
+
+#define TRUE 1
+#define FALSE 0
+#define NAO_VALORADA -1 // Estado inicial das variáveis antes do backtracking decidir
+
+// --- Estruturas de Dados ---
+
+// Representa uma variável (ex: 'a') ou sua negação (ex: '~a')
+typedef struct literal {
+    int id_variavel; // Índice numérico: 1 para 'a', 2 para 'b', etc.
+    int negado;      // 1 se for negado (~a), 0 se for normal (a)
 } Literal;
 
-// ===========================================
-// 2. DEFINIÇÃO DO TAD CLAUSULA
-// ===========================================
-// Uma Cláusula 3-CNF é uma disjunção (OU) de exatamente três Literais.
-typedef struct {
-    Literal l1; // Primeiro literal
-    Literal l2; // Segundo literal
-    Literal l3; // Terceiro literal
+// Representa uma cláusula do 3-CNF (ex: a V b V ~c)
+typedef struct clausula {
+    Literal literais[3];// Exatamente 3 literais por cláusula [cite: 41]
 } Clausula;
 
-// ===========================================
-// 3. DEFINIÇÃO DO TAD FORMULA
-// ===========================================
-// A Fórmula é uma conjunção (E) de M cláusulas.
-typedef struct {
-    Clausula *clausulas; // Vetor alocado dinamicamente para armazenar as M cláusulas.
-    int num_variaveis;   // N: Número total de variáveis (1 a 26).
-    int num_clausulas;   // M: Número de cláusulas.
+// Estrutura principal que guarda todo o problema
+typedef struct formula {
+    int num_variaveis;      // N
+    int num_clausulas;      // M
+    int prox_clausula_idx;  // Contador para saber quantas cláusulas já adicionamos
+    
+    Clausula *clausulas;    // Vetor dinâmico contendo todas as cláusulas
+    int *valoracao_variaveis; // Vetor dinâmico com o estado atual (V/F) de cada variável
 } Formula;
 
+// --- Protótipos das Funções (API) ---
 
-// ===========================================
-// 4. PROTÓTIPOS DAS FUNÇÕES (Interface)
-// ===========================================
-// Estas são as funções que devem ser implementadas em 'formula.c'.
-// O arquivo 'tp.c' (com o main) só pode chamar estas funções.
+// Aloca memória para a estrutura Formula e seus vetores internos [cite: 71]
+Formula* criaFormula(int n_variaveis, int n_clausulas);
+// Libera toda a memória alocada para evitar memory leaks [cite: 72]
+void destroiFormula(Formula *formula);
 
-/**
- * @brief Aloca e inicializa o TAD Formula.
- * @param N Número total de variáveis.
- * @param M Número total de cláusulas.
- * @return Um ponteiro para a Formula alocada ou NULL em caso de erro.
- */
-Formula* criaFormula(int N, int M);
+// Recebe 3 inteiros da entrada, converte para Literais e salva na Fórmula [cite: 73]
+int adicionaClausula(Formula *formula, int x, int y, int z);
 
-/**
- * @brief Desaloca a memória de todo o TAD Formula.
- * @param f Ponteiro para a Formula a ser destruída.
- */
-void destroiFormula(Formula* f);
+// Exibe a fórmula formatada (ex: (aVbVc) ^ ...) [cite: 74]
+void imprimeFormula(const Formula *formula);
 
-/**
- * @brief Adiciona uma cláusula lida da entrada na posição 'indice' do TAD Formula.
- * @param f Ponteiro para a Formula.
- * @param x, y, z Os três inteiros lidos que representam os literais (o sinal indica negação).
- * @param indice A posição no vetor onde a cláusula deve ser inserida.
- * @return 1 (Sucesso) ou 0 (Erro, se for definido tratamento de erro).
- */
-int adicionaClausula(Formula* f, int x, int y, int z, int indice);
+// Função Wrapper que inicia o processo de resolução (Backtracking) [cite: 75]
+int solucaoFormula(Formula *formula);
 
-/**
- * @brief Imprime a fórmula no formato 3-CNF, usando letras e conectivos (~, v, ^).
- * @param f Ponteiro para a Formula.
- */
-void imprimeFormula(Formula* f); 
-
-/**
- * @brief Tenta encontrar uma valoração (True/False) para as variáveis que satisfaça a fórmula.
- * [cite_start]Esta função deve ser implementada de forma recursiva (Backtracking). [cite: 77, 78]
- * @param f Ponteiro para a Formula.
- * @param var_atual A variável que está sendo testada na recursão (começa em 1).
- * @param val O vetor que armazena as valorações atuais (val[i] é o valor da variável i+1).
- * @return 1 se uma solução for encontrada, 0 se não for satisfazível.
- */
-int solucaoFormula(Formula* f, int var_atual, int* val);
-
-// FUNÇÃO AUXILIAR SUGERIDA:
-/**
- * @brief Verifica se a Fórmula é satisfeita com as valorações atuais.
- * @param f Ponteiro para a Formula.
- * @param val O vetor de valorações a ser testado.
- * @return 1 se a fórmula for True, 0 se for False.
- */
-int verificaSatisfatibilidade(Formula* f, int* val);
-
+// Função auxiliar para imprimir o resultado final (a valoração encontrada)
+void imprimeValoracao(const Formula *formula);
 
 #endif // FORMULA_H
