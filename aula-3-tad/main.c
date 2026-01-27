@@ -2,29 +2,31 @@
 #include "ponto.h"
 
 int main() {
-    float x, y;
-    /*Ponto* p = ponto_criar(3.0f, 4.0f);
-    if (ponto_acessa(p, &x, &y)) {
-        printf("Ponto criado em (%.2f, %.2f)\n", x, y);
-    } else {
-        printf("Erro ao acessar o ponto.\n");
-    }
-
-    if(ponto_atribui(p, 5.0, 6.0)) {
-        printf("Ponto atualizado com sucesso.\n");
-    } else {
-        printf("Erro ao atualizar o ponto.\n");
-    }
-
-    Ponto* p2 = ponto_criar(1.0f, 2.0f);*/
-
-   
-
-    printf("Criando ponto usando um vetor de coordenadas x e y\n\n");
-    Ponto *p = ponto_criar(3, 5.8);
+    // 1. CRIAÇÃO (Alocação)
+    // O usuário pede dois pontos. O sistema reserva dois espaços na memória.
+    printf("Criando pontos...\n");
+    
+    // Note que passar '3' (inteiro) funciona, o C converte para 3.0 (float) automaticamente.
+    Ponto *p = ponto_criar(3, 5.8);   
     Ponto *p2 = ponto_criar(4.1, 2.8);
-     float distancia = PontoDist(p, p2);
-     printf("Distancia dos pontos %f\n", distancia);
+
+    // Verificação de segurança (Boa prática!)
+    if (p == NULL || p2 == NULL) {
+        printf("Erro: Memória insuficiente!\n");
+        return 1;
+    }
+
+    // 2. USO (Processamento)
+    // Aqui corrigimos o nome da função para bater com a biblioteca
+    float distancia = ponto_distancia(p, p2);
+    
+    // %.2f formata o número para mostrar apenas 2 casas decimais
+    printf("Distancia entre os pontos: %.2f\n", distancia);
+
+    // 3. DESTRUIÇÃO (Limpeza)
+    // Devolvemos a memória dos DOIS pontos
     ponto_destruir(p);
+    ponto_destruir(p2); // Adicionado para evitar vazamento de memória
+
     return 0;
 }

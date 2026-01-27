@@ -11,4 +11,6 @@ void maior_Tipo(Pokemon **p, int n);
 
 void nome_Repetido(Pokemon **p, int n);
 
+void libera_Memoria(Pokemon **p, int n);
+
 #endif
