@@ -2,19 +2,7 @@
 
 // --- Funções Auxiliares (Privadas) ---
 
-// Função auxiliar para criar um Literal a partir de um inteiro
-// Ex: entrada -2 vira Literal{id: 2, negado: 1}
-Literal criaLiteral(int val) {
-    Literal l;
-    if (val < 0) {
-        l.id_variavel = -val; // Remove o sinal para pegar o ID
-        l.negado = 1;         // Marca como negado
-    } else {
-        l.id_variavel = val;
-        l.negado = 0;
-    }
-    return l;
-}
+
 
 // --- O Coração da Poda (Pruning) ---
 // Verifica se a valoração ATUAL das variáveis gera algum CONFLITO (Cláusula Falsa).
@@ -132,6 +120,20 @@ void destroiFormula(Formula *formula) {
     }
 }
 
+// Função auxiliar para criar um Literal a partir de um inteiro
+// Ex: entrada -2 vira Literal{id: 2, negado: 1}
+Literal criaLiteral(int val) {
+    Literal l;
+    if (val < 0) {
+        l.id_variavel = -val; // Remove o sinal para pegar o ID
+        l.negado = 1;         // Marca como negado
+    } else {
+        l.id_variavel = val;
+        l.negado = 0;
+    }
+    return l;
+}
+
 int adicionaClausula(Formula *formula, int x, int y, int z) {
     if (formula->prox_clausula_idx >= formula->num_clausulas) return ERRO;
 
@@ -139,10 +141,29 @@ int adicionaClausula(Formula *formula, int x, int y, int z) {
     Clausula *c = &formula->clausulas[formula->prox_clausula_idx];
     
     // Converte e armazena os 3 literais
-    c->literais[0] = criaLiteral(x);
-    c->literais[1] = criaLiteral(y);
-    c->literais[2] = criaLiteral(z);
+    // Conversão dos literais
+    Literal lx = criaLiteral(x);
+    Literal ly = criaLiteral(y);
+    Literal lz = criaLiteral(z);
 
+    // Armazenamento
+    c->literais[0] = lx;
+    c->literais[1] = ly;
+    c->literais[2] = lz;
+
+    // Print detalhado da conversão e armazenamento
+    printf("Clausula %d criada:\n", formula->prox_clausula_idx);
+
+    printf("  Literal 1: entrada = %d -> id_variavel = %d, negado = %d\n",
+           x, lx.id_variavel, lx.negado);
+
+    printf("  Literal 2: entrada = %d -> id_variavel = %d, negado = %d\n",
+           y, ly.id_variavel, ly.negado);
+
+    printf("  Literal 3: entrada = %d -> id_variavel = %d, negado = %d\n",
+           z, lz.id_variavel, lz.negado);
+
+    
     formula->prox_clausula_idx++;
     return SUCESSO;
 }

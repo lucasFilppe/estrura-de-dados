@@ -26,6 +26,7 @@ int main() {
              return 1;
         }
         adicionaClausula(f, x, y, z);
+        
     }
 
     // 4. Execução do Algoritmo de Resolução (Backtracking)
