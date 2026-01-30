@@ -35,18 +35,24 @@ int main()
   ItemPrint(i3);
   printf(" no Inicio\n");
 
+  // Mostra a lista completa com a sua formatação
+  ListaPrint(minhaLista);
+
   ListaInsereMeio(minhaLista, i4, 1);
   printf(" -> Inseriu: ");
   ItemPrint(i4);
   printf(" na pos 1\n");
+  ListaPrint(minhaLista);
 
-  ListaInsereMeio(minhaLista, i5, 2);
+  ListaInsereFim(minhaLista, i5);
   printf(" -> Inseriu: ");
   ItemPrint(i5);
-  printf(" na pos 3\n");
+  printf(" no Fim\n");
+  ListaPrint(minhaLista);
+  
 
   // Mostra a lista completa com a sua formatação
-  ListaPrint(minhaLista);
+  //ListaPrint(minhaLista);
 
   // 3. PESQUISA
   printf("\n[3] Testando Busca...\n");
