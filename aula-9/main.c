@@ -58,7 +58,7 @@ int main()
   printf("\n[3] Testando Busca...\n");
   Item recuperado;
 
-  if (ListaPesquisa(minhaLista, "Luigi", &recuperado))
+  if (ListaPesquisa(minhaLista, "lucas", &recuperado))
   {
     printf(" -> Encontrado: ");
     ItemPrint(recuperado);
@@ -66,7 +66,7 @@ int main()
   }
   else
   {
-    printf(" -> Luigi nao encontrado.\n");
+    printf(" -> nao encontrado.\n");
   }
 
   // 4. REMOÇÃO
@@ -77,6 +77,8 @@ int main()
   printf(" -> Removeu Inicio: ");
   ItemPrint(recuperado);
   printf("\n");
+  // 5. ESTADO FINAL
+  ListaPrint(minhaLista);
 
   // Remove do Fim (Luigi estava no fim antes?)
   // Estado atual esperado antes de remover fim: [Toad, Mario, Luigi]
