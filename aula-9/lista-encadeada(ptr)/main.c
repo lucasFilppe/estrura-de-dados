@@ -3,10 +3,7 @@
 #include <stdbool.h>
 #include "lista.h" // Inclui suas funções refatoradas
 
-// Definindo o Item auxiliar para o print funcionar
-void ItemPrint(Item i) {
-    printf("(%s, ID:%d)", i.nome, i.id);
-}
+
 
 int main() {
     printf("=== INICIO DA BATERIA DE TESTES ===\n\n");
@@ -30,7 +27,7 @@ int main() {
     Item i2 = {"Luigi", 2};
     Item i3 = {"Yoshi", 3};
     Item i4 = {"Toad", 4};
-    Item i5 = {"Bowser", 5};
+    Item i5 = {"Lucas", 5};
 
     // ---------------------------------------------------------
     // 2. TESTE: INSERÇÕES (Inicio, Fim e Meio)
@@ -38,17 +35,42 @@ int main() {
     printf("\n[2] Testando Insercoes...\n");
     
     // Inserir no INÍCIO
-    ListaInsereInicio(minhaLista, i1); 
-    printf(" -> Inseriu Inicio (Mario): ");
+    ListaInsereInicio(minhaLista, i2); 
+    printf(" -> Inseriu Inicio (Luigi): ");
     ListaPrint(minhaLista); // Esperado: [Mario]
+    
 
     
     // Inserir no FIM
-    ListaInsereFim(minhaLista, i2);    
-    printf(" -> Inseriu Fim (Luigi):    ");
-    ListaPrint(minhaLista); // Esperado: [Mario, Luigi]
+    ListaInsereFim(minhaLista, i3);    
+    printf(" -> Inseriu Fim (Yoshi):    ");
+    ListaPrint(minhaLista); // Esperado:
+
+    ListaInsereFim(minhaLista, i1);
+    printf(" -> Inseriu Fim (mario):    ");
+    ListaPrint(minhaLista); // Esperado:s
+
+    ListaInsereMeio(minhaLista, i4, 1);
+    printf(" -> Inseriu no meio, posição 1 (toad):    ");
+    ListaPrint(minhaLista); // Esperado:s
+
+    ListaInsereInicio(minhaLista, i5);
+    printf(" -> Inseriu no inicio (Lucas):    ");
+    ListaPrint(minhaLista); // Esperado:s
+
+    Item itemRecuperado;
+    ListaRemoveMeio(minhaLista, 2, &itemRecuperado);
+    printf(" -> Removeu Meio pos 2 (%s): ", itemRecuperado.nome);
+    ListaPrint(minhaLista); // Esperado: [Mario]
+
+    ListaRemoveInicio(minhaLista, &itemRecuperado);
+    printf("removeu lucas\n");
+    ListaPrint(minhaLista); 
+
+
 
     // Inserir no INÍCIO de novo
+    /*
     ListaInsereInicio(minhaLista, i3); 
     printf(" -> Inseriu Inicio (Yoshi): ");
     ListaPrint(minhaLista); // Esperado: [Yoshi, Mario, Luigi]
@@ -100,6 +122,7 @@ int main() {
     ListaRemoveMeio(minhaLista, 1, &recuperado); 
     printf(" -> Removeu Meio pos 1 (%s): ", recuperado.nome);
     ListaPrint(minhaLista); // Esperado: [Mario]
+    */
 
     // ---------------------------------------------------------
     // 5. TESTE: DESTRUIÇÃO
