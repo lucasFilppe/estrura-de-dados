@@ -1,41 +1,14 @@
 #include "pilha.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-/**
- * ============================================================================
- * ESTRUTURA DE DADOS: PILHA COM PONTEIROS (Lista Ligada)
- * ============================================================================
- * Implementação de uma pilha (STACK) usando lista ligada simples.
- * Princípio LIFO: Last In, First Out (Último a Entrar, Primeiro a Sair)
- * 
- * Vantagens:
- *   - Não tem limite de tamanho (crescimento dinâmico)
- *   - Operações eficientes O(1)
- *   - Usa memória sob demanda
- * ============================================================================
- */
 
-/**
- * TYPEDEF: Definição da célula (nó da lista ligada)
- * 
- * Cada célula representa um "elo" na corrente da pilha.
- * Contém:
- *   - item: os dados armazenados
- *   - prox: endereço da próxima célula (NULL se for a última)
- */
 typedef struct celula {
     Item item;              // Armazena o dado (tipo definido em pilha.h)
     struct celula *prox;    // Ponteiro para a próxima célula na pilha
 } Celula;
 
-/**
- * ESTRUTURA: A pilha em si
- * 
- * Mantém as informações essenciais da pilha:
- *   - topo: aponta para o primeiro elemento (após o nó sentinela)
- *   - n: quantidade total de elementos na pilha
- */
 struct pilha {
     Celula *topo;   // Ponteiro para o nó sentinela (controla o topo real)
     int n;          // Contador de elementos (tamanho da pilha)
@@ -342,7 +315,7 @@ void PilhaPrint(Pilha *pPilha) { // O(n) - proporcional ao número de elementos
     printf("[");
     
     /**
-     * PERCURSO:
+     * 
      * 
      * Começa no primeiro elemento real (após o sentinela)
      * Vai apontando de célula em célula até chegar ao final (NULL)
@@ -356,6 +329,7 @@ void PilhaPrint(Pilha *pPilha) { // O(n) - proporcional ao número de elementos
         
         // Avança para a próxima célula
         aux = aux->prox;
+        printf("\n");
     }    
     
     // Imprime o símbolo de fechamento e quebra de linha
