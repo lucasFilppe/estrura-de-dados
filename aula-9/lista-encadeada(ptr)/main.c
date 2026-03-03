@@ -37,9 +37,7 @@ int main() {
     // Inserir no INÍCIO
     ListaInsereInicio(minhaLista, i2); 
     printf(" -> Inseriu Inicio (Luigi): ");
-    ListaPrint(minhaLista); // Esperado: [Mario]
-    
-
+    ListaPrint(minhaLista); 
     
     // Inserir no FIM
     ListaInsereFim(minhaLista, i3);    
@@ -47,10 +45,13 @@ int main() {
     ListaPrint(minhaLista); // Esperado:
 
     ListaInsereFim(minhaLista, i1);
-    printf(" -> Inseriu Fim (mario):    ");
-    ListaPrint(minhaLista); // Esperado:s
+    printf(" -> Inseriu Fim %s %d\n", i1.nome, i1.id);
+    ListaPrint(minhaLista); // Esperado:
 
-    ListaInsereMeio(minhaLista, i4, 1);
+    int tamanho = ListaTamanho(minhaLista);
+    printf("Tamanho da lista %d\n",tamanho);
+    
+    ListaInsereMeio(minhaLista, i4, 2);
     printf(" -> Inseriu no meio, posição 1 (toad):    ");
     ListaPrint(minhaLista); // Esperado:s
 
